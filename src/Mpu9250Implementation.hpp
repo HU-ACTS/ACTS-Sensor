@@ -13,8 +13,6 @@
 #include "driver/gpio.h"
 #include "driver/i2c.h"
 
-#include "Sensor.hpp"
-
 #define WRITE_BIT              I2C_MASTER_WRITE /*!< I2C master write */
 #define READ_BIT               I2C_MASTER_READ  /*!< I2C master read */
 #define ACK_CHECK_EN           0x1              /*!< I2C master will check ack from slave*/
@@ -59,14 +57,31 @@
 #define AK8936_MAG_ZOUT_L       0x07
 #define AK8936_MAG_ZOUT_H       0x08
 
+#define AK8936_SINGLE_SAMPLE	0x01
 #define AK8936_CONT_MODE_1		0x02
 #define AK8936_CONT_MODE_2		0x06
+
+#define I2C_READ_FLAG			0x80
+#define I2C_SLV0_ADDR			0x25
+#define I2C_SLV0_REG			0x26
+#define I2C_SLV0_CTRL			0x27
+#define I2C_SLV0_DO				0x63
+#define I2C_SLV0_EN				0x80
+#define EXT_SENS_DATA_00		0x49
+#define USER_CTRL 				0x6A
+#define I2C_MST_EN				0x20
+#define I2C_MST_CLK 			0x0D
+#define I2C_MST_CTRL			0x24
+#define PWR_MGMNT_1				0x6B
+#define PWR_RESET				0x80
+#define AK8963_CNTL2			0x0B
+#define AK8963_RESET			0x01
 
 
 //
 #define MPU9250_BYPASS_REG		0x37
 #define MPU9250_BYPASS_BIT		0x02
-#define OUTPUT_SIZE 9
+
 class mpu9250_data{
 public:
    unsigned short AccelerometerX;
@@ -75,16 +90,16 @@ public:
    unsigned short GyroscopeX;
    unsigned short GyroscopeY;
    unsigned short GyroscopeZ;
-   unsigned short MagnetoX;
-   unsigned short MagnetoY;
-   unsigned short MagnetoZ;
+   short MagnetoX;
+   short MagnetoY;
+   short MagnetoZ;
 };
 
 
-class Mpu9250Implementation: public Sensor{
+class Mpu9250Implementation {
 public:
 	Mpu9250Implementation();
-	short int[OUTPUT_SIZE] read() override;
+	mpu9250_data GetMpu9250Data();
 	~Mpu9250Implementation();
 private:
 protected:

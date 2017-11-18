@@ -6,7 +6,6 @@
 #include "esp_log.h"
 #include "freertos/task.h"
 #include "bmp280.h"
-#include "Sensor.hpp"
 #define TAG_BMP280 "BMP280"
 
 #define SCL_PIN GPIO_NUM_26
@@ -14,9 +13,6 @@
 
 #define I2C_MASTER_ACK 0
 #define I2C_MASTER_NACK 1
-
-#define OUTPUT_SIZE 4
-
 class bmp280_data{
 public:
    float temp;
@@ -25,11 +21,11 @@ public:
 };
 
 
-class Bmp280Implementation: public Sensor{
+class Bmp280Implementation {
 public:
    Bmp280Implementation() {}
    ~Bmp280Implementation() {}
-   short int[OUTPUT_SIZE] read() override;
+   bmp280_data GetBmp280Data();
 private:
 protected:
 };
