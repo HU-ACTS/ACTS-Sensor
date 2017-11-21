@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "esp_err.h"
 #include "esp_log.h"
 
@@ -60,25 +64,13 @@
 #define AK8936_SINGLE_SAMPLE	0x01
 #define AK8936_CONT_MODE_1		0x02
 #define AK8936_CONT_MODE_2		0x06
+#define AK8936_16BIT			0x10
 
-#define I2C_READ_FLAG			0x80
-#define I2C_SLV0_ADDR			0x25
-#define I2C_SLV0_REG			0x26
-#define I2C_SLV0_CTRL			0x27
-#define I2C_SLV0_DO				0x63
-#define I2C_SLV0_EN				0x80
-#define EXT_SENS_DATA_00		0x49
-#define USER_CTRL 				0x6A
-#define I2C_MST_EN				0x20
-#define I2C_MST_CLK 			0x0D
-#define I2C_MST_CTRL			0x24
 #define PWR_MGMNT_1				0x6B
 #define PWR_RESET				0x80
 #define AK8963_CNTL2			0x0B
 #define AK8963_RESET			0x01
 
-
-//
 #define MPU9250_BYPASS_REG		0x37
 #define MPU9250_BYPASS_BIT		0x02
 
