@@ -37,7 +37,8 @@
 .cproject
 
 # Extra
+
 */build/*
-*/sdconfig
-*/sdconfig.old
+sdconfig
+sdconfig.old
 */Makefile
