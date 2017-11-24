@@ -41,4 +41,4 @@
 */build/*
 sdconfig
 sdconfig.old
-*/Makefile
+Makefile
