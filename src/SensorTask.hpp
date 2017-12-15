@@ -8,7 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-
+#include "esp_system.h"
 #include "esp_event_loop.h"
 
 #include "BaseTask.hpp"
@@ -20,7 +20,7 @@
 class SensorTask : BaseTask {
 public:
     SensorTask(unsigned int task_priority, DoubleBuffer &db, DataProcessor &dp);
-    friend void sensor_handle_task(void *args);
+    friend void SensorHandleTask(void *args);
 private:
     DoubleBuffer &DBHandle;
     DataProcessor &DataHandler;
