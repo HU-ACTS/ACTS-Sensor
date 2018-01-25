@@ -6,94 +6,150 @@
 
 extern EventGroupHandle_t GlobalEventGroupHandle;
 
+extern RTC_DATA_ATTR struct timeval sleep_enter_time;
+
+/**
+ * @brief Sample data structure
+ *
+ * This structure includes all data that will be sampled by the sensortask and
+ * will be written by the SDWriterTask. The doublebuffer uses this struct to
+ * initialize its buffers.
+ */
 typedef struct {
-	long long microTime;
-	short accelX;
-	short accelY;
-	short accelZ;
-	short gyroX;
-	short gyroY;
-	short gyroZ;
-	short magnetoX;
-	short magnetoY;
-	short magnetoZ;
-	int temp;
-	int pressure;
+	long long microTime;	/**< Timestamp derived from systick */
+	short accelX;			/**< Accelerometer X axis */
+	short accelY;			/**< Accelerometer Y axis */
+	short accelZ;			/**< Accelerometer Z axis */
+	short gyroX;			/**< Gyroscope X axis */
+	short gyroY;			/**< Gyroscope Y axis */
+	short gyroZ;			/**< Gyroscope Z axis */
+	short magnetoX;			/**< Magnetometer X axis */
+	short magnetoY;			/**< Magnetometer Y axis */
+	short magnetoZ;			/**< Magnetometer Z axis */
+	int temp;				/**< Temperature */
+	int pressure;			/**< Air pressure */
 } SampleData;
 
-// -------Flags for Tasks----------------------------
-// Flag for SensorTask to act upon
+/*! Flag for SensorTask to act upon */
 #define SensorMeasurementFlag 		( 1 << 0 )
-// Flags for WifiTask to act upon
+/*! Flags for WifiTask to act upon */
 #define WifiActivateFlag 			( 1 << 1 )
 #define WifiReadyFlag 				( 1 << 2 )
-// Flag for SdWriterTask to act upon
+/*! Flag for SdWriterTask to act upon */
 #define SensorBufferSdReady 		( 1 << 4 )
-// Flag to signal movement timeout count has been reached
+/*! Flag to signal movement timeout count has been reached */
 #define MovementTimeoutReached 		( 1 << 5 )
-// Flags from tasks stating they are ready to sleep
+/*! Flags for tasks stating that they are ready to sleep */
 #define StandbySensorTaskUnhandled 	( 1 << 6 )
 #define StandbyWifiTaskUnhandled   	( 1 << 7 )
 #define StandbyWriterTaskUnhandled 	( 1 << 8 )
+/*! Flag for system errors */
+#define SystemErrorFlag      		( 1 << 9 )
+#define SystemErrorBit       		( 1 << 10 )
+/*! Flag to signal that he SNTP task is done receiving time */
+#define SNTPTaskDoneFlag			( 1 << 11 )
 
-#define SystemErrorFlag      (1 << 9)
-#define SystemErrorBit       (1 << 10)
-
-// GPIO defines
-#define GPIO_LED_BLUE			GPIO_NUM_13
+/*! LED GPIO defines */
+#define GPIO_LED_BLUE			GPIO_NUM_17
 #define GPIO_LED_GREEN			GPIO_NUM_14
-#define GPIO_LED_RED			GPIO_NUM_12
+#define GPIO_LED_RED			GPIO_NUM_13
+/*! SD card GPIO defines */
 #define GPIO_SD_DETECT			GPIO_NUM_4
+#define GPIO_SD_POWER			GPIO_NUM_27
+/*! Power GPIO defines */
 #define GPIO_CHARGE_DETECT		GPIO_NUM_21
-#define GPIO_CHG_CNTRL			GPIO_NUM_27
-#define GPIO_PW_GOOD			GPIO_NUM_16
-#define GPIO_PW_ADC				GPIO_NUM_15
+#define GPIO_PW_ADC				GPI_NUM_34   //adc 1 channel 6
+/*! MPU9250 interrupt GPIO define */
 #define GPIO_MPU_INT			GPI_NUM_35
+/*! Battery ADC channel */
+#define ADC_BATTERY				ADC1_CHANNEL_6
 
-// Frequency defines
+/*! Sample rate in hz define */
 #define SAMPLE_RATE_H			100
-#define SAMPLE_TIME_MS			10
+/*! Sample rate in ms define */
+#define SAMPE_TIME_MS			10
+/*! Binary buffer size, the system initializes two of these on startup */
 #define BINARY_BUFFER_SIZE		1000
 
-// SDWriter defines
+/*! SDWriter pin defines */
 #define PIN_NUM_MISO 			GPIO_NUM_23
 #define PIN_NUM_MOSI 			GPIO_NUM_19
 #define PIN_NUM_CLK 			GPIO_NUM_18
 #define PIN_NUM_CS 				GPIO_NUM_5
+/*! SDWriter spi speed define in KHZ */
 #define SD_CARD_SPI_SPEED_KHZ	1000
+/*! SDWriter init retry define */
+#define SDMMC_INIT_RETRIES		4
 
-// Sleep settings
-#define SLEEP_TIME_SEC 			60
-#define TIMEOUT_TIME_SEC		60
+/*! When the ADC reads a voltage lower than this, the device goes to sleep */
+#define TURN_OFF_VOLTAGE		3.3
 
-// Wifi settings
-#define WIFI_POLL_FREQUENCY_SEC	25
-#define WIFI_CONNECT_TIMEOUT	4000
+/*! Sleep time in seconds */
+#define SLEEP_TIME_SEC 			300
+/*! Movement timeout in seconds */
+#define TIMEOUT_TIME_SEC		310
 
-// Dataprocessor defines
+/*! Wifi poll frequency in seconds */
+#define WIFI_POLL_FREQUENCY_SEC	30
+/*! Wifi timeout in milliseconds */
+#define WIFI_CONNECT_TIMEOUT	10000
+/*! Wifi ssid to connect to */
+#define WIFI_SSID				"ACTS"
+/*! Wifi password associated with the ssid */
+#define WIFI_PASSWORD			"12345678"
+/*! TCP server ip */
+#define WIFI_TCP_SERVER			"192.168.8.101"
+/*! TCP server port */
+#define WIFI_TCP_PORT			3010
+
+/*! SNTP task read retry count */
+#define SNTP_READ_TIME_RETRY	50
+
+/*! I2C SDA pin define */
+#define GPIO_SDA				GPIO_NUM_25
+/*! I2C SCL pin dfine */
+#define GPIO_SCL				GPIO_NUM_26
+/*! I2C bus speed in Hz */
+#define I2C_SPEED				400000
+
+/*! Dataprocessor trigger defines */
 #define TRIGGER_VALUE_X			1000
 #define TRIGGER_VALUE_Y			1000
 #define TRIGGER_VALUE_Z			1000
 
-// SensorTask defines
+/*! Sensortask defines */
 #define SENSORTASK_CORE_NUM 	1
 #define SENSORTASK_PRIORITY 	2
 #define SENSORTASK_STACK_SIZE 	2048
 
-// SensorTask defines
+/*! Writertask defines */
 #define WRITERTASK_CORE_NUM 	0
 #define WRITERTASK_PRIORITY 	2
 #define WRITERTASK_STACK_SIZE 	4096
 
-// Wifitask defines
+/*! Wifitask defines */
 #define WIFITASK_CORE_NUM 		0
 #define WIFITASK_PRIORITY 		0
 #define WIFITASK_STACK_SIZE 	4096
 
-// StandbyController defines
+/*! Standbycontroller defines */
 #define STANDBYCONT_CORE_NUM 	1
 #define STANDBYCONT_PRIORITY 	4
 #define STANDBYCONT_STACK_SIZE 	2048
 #define STANDBYCONT_LOOP_DELAY	250
+
+/*! SNTPtask defines */
+#define SNTPTASK_CORE_NUM 		0
+#define SNTPTASK_PRIORITY 		1
+#define SNTPTASK_STACK_SIZE 	4096
+
+/*! SNTPtask defines */
+#define BLINKTASK_CORE_NUM 		0
+#define BLINKTASK_PRIORITY 		5
+#define BLINKTASK_STACK_SIZE 	2048
+
+/*! Wifi event bit used in WiFiC.c file */
+#define WIFI_EVENT_BIT			1
+
 
 #endif //SYSTEM_VARS_HPP

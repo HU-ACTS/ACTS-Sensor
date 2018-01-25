@@ -1,9 +1,9 @@
-#include "SdWriterTask.hpp"
+#include "SdWriterController.hpp"
 
-SdWriterTask::SdWriterTask(unsigned int task_priority, DoubleBuffer &db, SDWriter &sdw) : BaseTask(task_priority), DBHandle(db), SDWHandle(sdw)  {main_task();}
+SdWriterController::SdWriterController(unsigned int task_priority, DoubleBuffer &db, SDWriter &sdw) : BaseTask(task_priority), DBHandle(db), SDWHandle(sdw)  {main_task();}
 
 void run_sd_task(void *args) {
-	SdWriterTask *sTask = static_cast<SdWriterTask*>(args);
+	SdWriterController *sTask = static_cast<SdWriterController*>(args);
 
     while(1)  {
         EventBits_t uxBits;
@@ -11,9 +11,10 @@ void run_sd_task(void *args) {
 
         if(uxBits & SensorBufferSdReady){
         	ESP_LOGI("WRITER TASK", "Writing data");
-        	sTask->SDWHandle.Open();
-        	sTask->DBHandle.writeToSd();
-        	sTask->SDWHandle.Close();
+        	if(sTask->SDWHandle.Open() == SD_WRITER_OK) {
+        		sTask->DBHandle.writeToSd();
+        		sTask->SDWHandle.Close();
+        	}
         }
 
         if(uxBits & StandbyWriterTaskUnhandled) {
@@ -26,7 +27,7 @@ void run_sd_task(void *args) {
     }
 }
 
-void SdWriterTask::main_task() {
+void SdWriterController::main_task() {
 	  TaskHandle_t xHandle = NULL;
 	  void* thisTask = static_cast<void*>(this);
 

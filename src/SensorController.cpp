@@ -1,6 +1,6 @@
-#include "SensorTask.hpp"
+#include "SensorController.hpp"
 
-SensorTask::SensorTask(unsigned int task_priority, DoubleBuffer &db, DataProcessor &dp) : 
+SensorController::SensorController(unsigned int task_priority, DoubleBuffer &db, DataProcessor &dp) :
     BaseTask(task_priority), 
     DBHandle{db}, 
     DataHandler{dp},     
@@ -10,8 +10,8 @@ SensorTask::SensorTask(unsigned int task_priority, DoubleBuffer &db, DataProcess
         main_task(); 
     }
 
-void SensorHandleTask(void *args)  {
-	SensorTask *sTask = static_cast<SensorTask*>(args);
+void sensor_handle_task(void *args)  {
+	SensorController *sTask = static_cast<SensorController*>(args);
 	SampleData SensorData;
 	EventBits_t uxBits;
 	short MPUData[sTask->Sensor_MPU->DataSize() / sizeof(short)];
@@ -70,19 +70,19 @@ void print_struct(SampleData SensorData) {
 }
 
 
-void SetSensorMeasurementBit( TimerHandle_t xTimer )  {
+void set_sensor_measurement_bit( TimerHandle_t xTimer )  {
     xEventGroupSetBits(GlobalEventGroupHandle, SensorMeasurementFlag);
 }
 
-void SensorTask::main_task() {
+void SensorController::main_task() {
 	ESP_LOGI("SENSOR TASK", "Task starting...");
 
 	TimerHandle_t sample_poll_timer = NULL;
 	sample_poll_timer = xTimerCreate("sensor_poll_clock",
-			SAMPLE_TIME_MS,
+			SAMPE_TIME_MS,
 			pdTRUE,
 			SENSORTASK_TIMER_ID,
-			SetSensorMeasurementBit);
+			set_sensor_measurement_bit);
     xTimerStart(sample_poll_timer, 0 );
 
     if(sample_poll_timer == NULL) {
@@ -94,7 +94,7 @@ void SensorTask::main_task() {
 
     TaskHandle_t xHandle = NULL;
     void* thisTask = static_cast<void*>(this);
-    BaseType_t xReturned = xTaskCreatePinnedToCore(SensorHandleTask,
+    BaseType_t xReturned = xTaskCreatePinnedToCore(sensor_handle_task,
     												"sensor_task",
 													SENSORTASK_STACK_SIZE,
 													thisTask,

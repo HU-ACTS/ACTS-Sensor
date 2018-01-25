@@ -5,12 +5,12 @@ DataProcessor::DataProcessor() {
 	OldAcceleroYValue = 0;
 	OldAcceleroZValue = 0;
 	TimeoutCounter = 0;
-	TimeoutTrigger = TIMEOUT_TIME_SEC * 1000;
+	TimeoutTrigger = 60000;
 	LastTriggerOn = false;
 	ActivityData = 0;
-	TriggerValueX = TRIGGER_VALUE_X;
-	TriggerValueY = TRIGGER_VALUE_Y;
-	TriggerValueZ = TRIGGER_VALUE_Z;
+	TriggerValueX = 2000;
+	TriggerValueY = 2000;
+	TriggerValueZ = 2000;
 }
 
 void DataProcessor::SetTimeoutValue(int NewTriggerms) {
@@ -21,10 +21,6 @@ void DataProcessor::SetTrigger(int triggerx, int triggery, int triggerz) {
 	TriggerValueX = triggerx;
 	TriggerValueY = triggery;
 	TriggerValueZ = triggerz;
-}
-
-void DataProcessor::ResetActivityData() {
-	ActivityData = 0;
 }
 
 void DataProcessor::HandleData(SampleData NewData) {
@@ -53,7 +49,7 @@ void DataProcessor::HandleData(SampleData NewData) {
 		TimeoutCounter = 0;
 	}
 	else {
-		TimeoutCounter += SAMPLE_TIME_MS;
+		TimeoutCounter += SAMPE_TIME_MS;
 		if(TimeoutCounter >= TimeoutTrigger) {
 			xEventGroupSetBits(GlobalEventGroupHandle, MovementTimeoutReached);
 		}
@@ -67,6 +63,10 @@ void DataProcessor::HandleData(SampleData NewData) {
 
 double DataProcessor::GetActivityData() {
 	return ActivityData;
+}
+
+void DataProcessor::ResetActivityData() {
+	ActivityData = 0;
 }
 
 DataProcessor::~DataProcessor(){

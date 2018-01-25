@@ -1,3 +1,19 @@
+/**
+* @file SensorTask.hpp
+* @data 21 september, 2017
+*
+* \class SensorTask
+*
+* This task will sample at a frequency of SAMPLE_RATE_H data
+* from all sensors (in this case BMP280 and MPU9250). A xTimer
+* will run at that frequency and set a bit. The task will then
+* read data from the sensors (which are connected through I2C)
+* and send this data to the DoubleBuffer and DataProcessor.
+*
+* If the sleepbit has been set this task will go into an infinite loop.
+*
+*/
+
 #ifndef SENSOR_TASK_HPP
 #define SENSOR_TASK_HPP
 
@@ -16,20 +32,11 @@
 #include "DataProcessor.hpp"
 #include "Mpu9250Implementation.hpp"
 #include "Bmp280Implementation.hpp"
-/// @brief SensorTask is the task that samples the sensors. 
-/// It should be run on a dedicated core to ensure deadlines on high frequencies (>= 100Hz) 
-/// The data that it collects is passed to the doublebuffer and dataprocessor.        
-class SensorTask : BaseTask {
-public:
-    /// @brief SensorTask ctor that sets up and starts the task (currently on dedicated core 1)
-    /// param[unsigned int] task_priority Priority of task used in task scheduler.
-    /// param[DoubleBuffer&] db Doublebuffer ref object where sample data will be stored.
-    /// param[DataProcessor&] dp DataProcessor ref object that processes the data.  
-    SensorTask(unsigned int task_priority, DoubleBuffer &db, DataProcessor &dp);
 
-    /// @brief SensorHandleTask The task pointer function that is required as a binding to the freertos framework.
-    /// param[in] args arguments pointer
-    friend void SensorHandleTask(void *args);
+class SensorController : BaseTask {
+public:
+	SensorController(unsigned int task_priority, DoubleBuffer &db, DataProcessor &dp);
+    friend void sensor_handle_task(void *args);
 private:
     DoubleBuffer &DBHandle;
     DataProcessor &DataHandler;
