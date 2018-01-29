@@ -50,9 +50,9 @@ typedef struct {
 #define SNTPTaskDoneFlag			( 1 << 11 )
 
 /*! LED GPIO defines */
-#define GPIO_LED_BLUE			GPIO_NUM_17
+#define GPIO_LED_BLUE			GPIO_NUM_13
 #define GPIO_LED_GREEN			GPIO_NUM_14
-#define GPIO_LED_RED			GPIO_NUM_13
+#define GPIO_LED_RED			GPIO_NUM_17
 /*! SD card GPIO defines */
 #define GPIO_SD_DETECT			GPIO_NUM_4
 #define GPIO_SD_POWER			GPIO_NUM_27
@@ -82,7 +82,10 @@ typedef struct {
 #define SDMMC_INIT_RETRIES		4
 
 /*! When the ADC reads a voltage lower than this, the device goes to sleep */
-#define TURN_OFF_VOLTAGE		3.3
+#define TURN_OFF_VOLTAGE		3.0
+
+/*! ADC division factor for battery voltage reading */
+#define ADC_TO_BAT_VOLTAGE		587.0
 
 /*! Sleep time in seconds */
 #define SLEEP_TIME_SEC 			300
@@ -104,6 +107,9 @@ typedef struct {
 
 /*! SNTP task read retry count */
 #define SNTP_READ_TIME_RETRY	50
+
+/*! MovementStack maximum queue size */
+#define QUEUE_MAX_SIZE			300
 
 /*! I2C SDA pin define */
 #define GPIO_SDA				GPIO_NUM_25
@@ -141,7 +147,7 @@ typedef struct {
 /*! SNTPtask defines */
 #define SNTPTASK_CORE_NUM 		0
 #define SNTPTASK_PRIORITY 		1
-#define SNTPTASK_STACK_SIZE 	4096
+#define SNTPTASK_STACK_SIZE 	8000
 
 /*! SNTPtask defines */
 #define BLINKTASK_CORE_NUM 		0

@@ -43,13 +43,6 @@ bool SDWriter::WaitForCard(int timeout) {
 	}
 }
 
-bool SDWriter::CardDetectState() {
-	if(gpio_get_level(GPIO_SD_DETECT) == 1) {
-		return true;
-	}
-	return false;
-}
-
 SDWriterErrorCodes SDWriter::InitSDMMC(int retries) {
 	ESP_LOGI("SD WRITER", "Initializing SD card using SPI peripheral");
 

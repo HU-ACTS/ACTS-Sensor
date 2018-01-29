@@ -1,6 +1,11 @@
 #include "WifiController.hpp"
 
-WifiController::WifiController(unsigned int task_priority, DataProcessor &dp) : BaseTask(task_priority), DPHandle{dp}  { main_task(); }
+WifiController::WifiController(unsigned int task_priority, DataProcessor &dp) :
+	BaseTask(task_priority),
+	DPHandle{dp}
+	{
+		main_task();
+	}
 
 void run_wifi_task(void *args)  {
 	WifiController *sTask = static_cast<WifiController*>(args);
@@ -24,7 +29,7 @@ void run_wifi_task(void *args)  {
 					ESP_LOGI("WIFI TASK", "Socket connected");
 					char send_string[50];
 					while(MovementSaver.DataCount() != 0) {
-						sprintf(send_string, "%.2f\n", sTask->DPHandle.GetActivityData());
+						sprintf(send_string, "%.2f\n", MovementSaver.GetActivityData());
 						ESP_LOGI("WIFI TASK", "Sending data to server: %d: %s", MovementSaver.DataCount(), send_string);
 						TCPSend(send_string, strlen(send_string));
 						MovementSaver.PopData();

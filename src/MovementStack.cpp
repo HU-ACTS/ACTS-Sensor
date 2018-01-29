@@ -14,7 +14,9 @@ void MovementStack::PopData() {
 }
 
 void MovementStack::PushData(double ActivityData) {
-	ActivityDataQueue.push(ActivityData);
+	if(ActivityDataQueue.size() < QUEUE_MAX_SIZE) {
+		ActivityDataQueue.push(ActivityData);
+	}
 }
 
 int MovementStack::DataCount() {

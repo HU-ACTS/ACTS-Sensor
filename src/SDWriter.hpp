@@ -49,8 +49,15 @@ public:
 	 */
 	SDWriter();
 
+	/*!
+	 * \brief WaitForCard method
+	 * \param timeout in milliseconds
+	 * \return bool if the card is pressent (true) or not (false)
+	 *
+	 * This method waits for a card to be inserted. If the
+	 * timeout is reached, false will be returned.
+	 */
 	bool WaitForCard(int timeout);
-	bool CardDetectState();
 
 	/*!
 	 * \brief InitSDMMC method

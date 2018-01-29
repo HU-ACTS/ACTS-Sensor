@@ -1,6 +1,10 @@
 #include "StandbyController.hpp"
 
-StandbyController::StandbyController(unsigned int task_priority) : BaseTask(task_priority) { main_task(); }
+StandbyController::StandbyController(unsigned int task_priority) :
+	BaseTask(task_priority)
+	{
+		main_task();
+	}
 
 void standbycontroller_handle_task(void *args)  {
 	EventBits_t uxBits;
@@ -17,14 +21,12 @@ void standbycontroller_handle_task(void *args)  {
 	// init charge detect pin and variables
 	gpio_pad_select_gpio(GPIO_CHARGE_DETECT);
 	gpio_set_direction(GPIO_CHARGE_DETECT, GPIO_MODE_INPUT);
-	int old_charge_detect_gpio_state = 0;
-	int charge_detect_gpio_state = 0;
+	int OldChargeDetectGPIOState = 0;
+	int ChargeDetectGPIOState = 0;
 
 	// init sd detect pin and variables
 	gpio_pad_select_gpio(GPIO_SD_DETECT);
 	gpio_set_direction(GPIO_SD_DETECT, GPIO_MODE_INPUT);
-	int old_card_detect_gpio_state = 0;
-	int card_detect_gpio_state = 0;
 
 	while(true) {
 		vTaskDelay(STANDBYCONT_LOOP_DELAY / portTICK_PERIOD_MS);
@@ -54,36 +56,36 @@ void standbycontroller_handle_task(void *args)  {
 		}
 		else {
 
-			double BatteryVoltage = (adc1_get_raw(ADC_BATTERY) * 3.6 * 2) / 1241;
+			//
+			/*float BatteryVoltage = adc1_get_raw(ADC_BATTERY) / ADC_TO_BAT_VOLTAGE;
 			if(BatteryVoltage < TURN_OFF_VOLTAGE) {
 				ESP_LOGI("SLEEP TASK", "Setting bits due to a low battery");
 				xEventGroupSetBits(GlobalEventGroupHandle, (StandbySensorTaskUnhandled | StandbyWifiTaskUnhandled | StandbyWriterTaskUnhandled));
 				InfinityReset = true;
 				EventBitsSet = true;
-			}
+			}*/
 
 			// card detect falling edge detector
-			card_detect_gpio_state = gpio_get_level(GPIO_SD_DETECT);
-			if(card_detect_gpio_state == 0 && old_card_detect_gpio_state == 1) {
-				ESP_LOGI("SLEEP TASK", "Setting bits due to SD-card remove");
-				xEventGroupSetBits(GlobalEventGroupHandle, (StandbySensorTaskUnhandled | StandbyWifiTaskUnhandled | StandbyWriterTaskUnhandled));
-				PinInterruptReset = true;
-				EventBitsSet = true;
-			}
-			else {
-				old_card_detect_gpio_state = card_detect_gpio_state;
+			if(gpio_get_level(GPIO_SD_DETECT) == 0) {
+				vTaskDelay(20 / portTICK_PERIOD_MS);
+				if(gpio_get_level(GPIO_SD_DETECT) == 0) {
+					ESP_LOGI("SLEEP TASK", "Setting bits due to SD-card remove");
+					xEventGroupSetBits(GlobalEventGroupHandle, (StandbySensorTaskUnhandled | StandbyWifiTaskUnhandled | StandbyWriterTaskUnhandled));
+					PinInterruptReset = true;
+					EventBitsSet = true;
+				}
 			}
 
 			// charge detect rising edge detector
-			charge_detect_gpio_state = gpio_get_level(GPIO_CHARGE_DETECT);
-			if(charge_detect_gpio_state == 0 && old_charge_detect_gpio_state == 1) {
+			ChargeDetectGPIOState = gpio_get_level(GPIO_CHARGE_DETECT);
+			if(ChargeDetectGPIOState == 0 && OldChargeDetectGPIOState == 1) {
 				ESP_LOGI("SLEEP TASK", "Setting bits due to charge released");
 				xEventGroupSetBits(GlobalEventGroupHandle, (StandbySensorTaskUnhandled | StandbyWifiTaskUnhandled | StandbyWriterTaskUnhandled));
 				FastReset = true;
 				EventBitsSet = true;
 			}
 			else {
-				old_charge_detect_gpio_state = charge_detect_gpio_state;
+				OldChargeDetectGPIOState = ChargeDetectGPIOState;
 			}
 
 			// movement timeout sleep

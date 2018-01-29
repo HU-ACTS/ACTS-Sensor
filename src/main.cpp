@@ -1,3 +1,19 @@
+/** \mainpage
+*
+****************************************************************************
+* Made for the DotDotFactory, by the Hogeschool Utrecht.
+*
+* Copyright The DotDotFactory ( 2018 - 2019 )
+*
+* Date : 26/01/2018
+*
+****************************************************************************
+*
+* \section License
+*
+* TODOOOOO 8===>
+**************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,6 +110,7 @@ static void i2c_master_init() {
 
 
 void error_flash_init() {
+
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES) {
         // NVS partition was truncated and needs to be erased
@@ -101,6 +118,7 @@ void error_flash_init() {
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
+
     nvs_handle my_handle;
     err = nvs_open("storage", NVS_READWRITE, &my_handle);
     int32_t error_value = (int32_t) ErrorCode::NO_ERROR; // value will default to 0, if not set yet in NVS
@@ -117,6 +135,7 @@ void error_flash_init() {
         default :
         	ESP_LOGI("INIT", "Error (%d) reading!", err);
     }
+
     if(failed)  {
         //int32_t error_code = (int32_t) error::errCode; // value will default to 0, if not set yet in NVS
         err = nvs_set_i32(my_handle, "error_value", (int32_t) ErrorCode::NO_ERROR);
@@ -126,6 +145,7 @@ void error_flash_init() {
     else    {
         nvs_close(my_handle);
     }
+
     if(error_value != (int32_t) ErrorCode::NO_ERROR) {
         ESP_LOGI("INIT", "Last ran ended with error code: %i\n", error_value);
     }
@@ -135,11 +155,45 @@ void error_flash_init() {
 }
 
 void BuildFileName(char *TimeStringBuffer, int str_len) {
-	struct tm timeinfo;
-	localtime_r(&GlobalStartTime, &timeinfo);
-	strftime(TimeStringBuffer, str_len, "%Y_%m_%d_%H_%M_%S", &timeinfo);
-	ESP_LOGI("MAIN", "Central time:  %s  ", TimeStringBuffer);
-	strcat(TimeStringBuffer, ".bin");
+
+	if(GlobalStartTime == 0) {
+		esp_err_t err;
+		nvs_handle file_name_handle;
+
+		nvs_open("storage", NVS_READWRITE, &file_name_handle);
+		err = nvs_get_str(file_name_handle, "Fname", TimeStringBuffer, (size_t *)&str_len);
+		if(err != ESP_OK) {
+			strcpy(TimeStringBuffer, "GenericName");
+			ESP_LOGI("MAIN", "Error (%d) reading!", err);
+		}
+		nvs_close(file_name_handle);
+
+		ESP_LOGI("MAIN", "Filename from flash: %s", TimeStringBuffer);
+	}
+	else {
+		struct tm timeinfo;
+		localtime_r(&GlobalStartTime, &timeinfo);
+		strftime(TimeStringBuffer, str_len, "%Y_%m_%d_%H_%M_%S", &timeinfo);
+		strcat(TimeStringBuffer, ".bin");
+
+		nvs_handle file_name_handle;
+		nvs_open("storage", NVS_READWRITE, &file_name_handle);
+		nvs_set_str(file_name_handle, "Fname", TimeStringBuffer);
+		nvs_commit(file_name_handle);
+		nvs_close(file_name_handle);
+
+		ESP_LOGI("MAIN", "Filename from wifi: %s", TimeStringBuffer);
+	}
+}
+
+void CheckForSdcard(void) {
+	// init sd detect pin and variables
+	gpio_pad_select_gpio(GPIO_SD_DETECT);
+	gpio_set_direction(GPIO_SD_DETECT, GPIO_MODE_INPUT);
+	if(gpio_get_level(GPIO_SD_DETECT) == 0) {
+		esp_sleep_enable_ext1_wakeup((1<<GPIO_SD_DETECT), ESP_EXT1_WAKEUP_ANY_HIGH);
+		esp_deep_sleep_start();
+	}
 }
 
 void blink_task(void *pvParameter)
@@ -153,10 +207,9 @@ void blink_task(void *pvParameter)
 }
 
 void sntp_task(void* param) {
-    ESP_LOGI("SNTP TASK", "Initializing wifi");
+    ESP_LOGI("SNTP TASK", "Initializing wifi and reading time");
     WiFiInitialize(WIFI_SSID, WIFI_PASSWORD);
 	bool enabled = WiFiConnect(WIFI_CONNECT_TIMEOUT);
-	ESP_LOGI("SNTP TASK", "Reading time");
 	GlobalStartTime = WiFiGetTime(SNTP_READ_TIME_RETRY);
 	WiFiDisconnect();
 
@@ -177,7 +230,12 @@ void sntp_task(void* param) {
 
 extern "C" void app_main(void)
 {
-    ESP_LOGI("MAIN", "Booting completed");
+	ESP_LOGI("MAIN", "Booting completed");
+	
+	gpio_init_all();
+
+	CheckForSdcard();
+
     GlobalEventGroupHandle = xEventGroupCreate();
 
     if(nvs_flash_init() != ESP_OK)   {
@@ -193,20 +251,19 @@ extern "C" void app_main(void)
     }
     else {
     	ESP_LOGI("MAIN", "Woke up from normal reset");
-    }
 
-    ESP_LOGI("MAIN", "Creating SNTP task");
-    TaskHandle_t sntp_task_handle;
-    xTaskCreatePinnedToCore(sntp_task, "sntp_task", SNTPTASK_STACK_SIZE, NULL, SNTPTASK_PRIORITY, &sntp_task_handle, SNTPTASK_CORE_NUM);
-    xEventGroupWaitBits(GlobalEventGroupHandle, SNTPTaskDoneFlag, pdTRUE, pdFALSE, portMAX_DELAY);
-    vTaskDelete(sntp_task_handle);
+    	ESP_LOGI("MAIN", "Creating SNTP task");
+   	    TaskHandle_t SNTPTaskHandle;
+   	    xTaskCreatePinnedToCore(sntp_task, "sntp_task", SNTPTASK_STACK_SIZE, NULL, SNTPTASK_PRIORITY, &SNTPTaskHandle, SNTPTASK_CORE_NUM);
+   	    xEventGroupWaitBits(GlobalEventGroupHandle, SNTPTaskDoneFlag, pdTRUE, pdFALSE, portMAX_DELAY);
+   	    vTaskDelete(SNTPTaskHandle);
+    }
 
     int sleep_time_ms = (GlobalTimeValNow.tv_sec - sleep_enter_time.tv_sec) * 1000 + (GlobalTimeValNow.tv_usec - sleep_enter_time.tv_usec) / 1000;
     ESP_LOGI("MAIN", "Time spent in deep sleep: %d ms", sleep_time_ms);
 
     error_flash_init();
     i2c_master_init();
-    gpio_init_all();
 
     // Start blink task
     blink_set_led(GPIO_LED_GREEN, 10, 5000);
@@ -224,11 +281,11 @@ extern "C" void app_main(void)
 
     DoubleBuffer *GlobalDoubleBuffer = new DoubleBuffer(*GlobalSDWriter);
 
+    StandbyController *sbc = new StandbyController(STANDBYCONT_PRIORITY);
+
     SensorController *st = new SensorController(SENSORTASK_PRIORITY, *GlobalDoubleBuffer, *GlobalDataHandler);
 
     SdWriterController *sdw = new SdWriterController(WRITERTASK_PRIORITY, *GlobalDoubleBuffer, *GlobalSDWriter);
-
-    StandbyController *sbc = new StandbyController(STANDBYCONT_PRIORITY);
 
     WifiController *wt = new WifiController(WIFITASK_PRIORITY, *GlobalDataHandler);
 

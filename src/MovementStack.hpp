@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include "esp_log.h"
+#include "SystemVariables.hpp"
 #include <queue>
 
 class  MovementStack{

@@ -1,6 +1,12 @@
 #include "SdWriterController.hpp"
 
-SdWriterController::SdWriterController(unsigned int task_priority, DoubleBuffer &db, SDWriter &sdw) : BaseTask(task_priority), DBHandle(db), SDWHandle(sdw)  {main_task();}
+SdWriterController::SdWriterController(unsigned int TaskPriority, DoubleBuffer &db, SDWriter &sdw) :
+	BaseTask(TaskPriority),
+	DBHandle(db),
+	SDWHandle(sdw)
+	{
+		main_task();
+	}
 
 void run_sd_task(void *args) {
 	SdWriterController *sTask = static_cast<SdWriterController*>(args);
